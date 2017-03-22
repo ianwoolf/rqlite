@@ -343,10 +343,16 @@ func (s *Store) APIPeers() (map[string]string, error) {
 	s.metaMu.RLock()
 	defer s.metaMu.RUnlock()
 
-	peers := make(map[string]string, len(s.meta.APIPeers))
-	for k, v := range s.meta.APIPeers {
-		peers[k] = v
+	raftPeers, err := s.peerStore.Peers()
+	if err != nil {
+		return nil, err
 	}
+	peers := make(map[string]string, len(raftPeers))
+	for _, raftAddr := range raftPeers {
+		apiAddr, _ := s.meta.APIPeers[raftAddr]
+		peers[raftAddr] = apiAddr
+	}
+
 	return peers, nil
 }
 
